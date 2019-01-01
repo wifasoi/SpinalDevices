@@ -1,0 +1,13 @@
+[options]
+mode prove
+depth 300
+
+[engines]
+smtbmc z3
+
+[script]
+read_verilog -formal -sv testCounter.sv
+prep -top testCounter
+
+[files]
+testCounter.sv

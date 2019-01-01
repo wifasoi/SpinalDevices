@@ -38,3 +38,11 @@ bin/
 
 simWorkspace/
 tmp/
+
+.metals/*
+.vscode/*
+.bloop/*
+*.log
+test/*
+testCounter/*
+*.sv
