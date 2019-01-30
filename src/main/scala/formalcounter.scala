@@ -14,6 +14,7 @@ import spinal.core.Formal._
 
 import org.apache.commons.io._
 import java.io._
+import spinal.lib.eda.yosys._
 
 class testCounter(start: Int,end: Int) extends Component{
     val io = new Bundle{
@@ -34,16 +35,24 @@ class testCounter(start: Int,end: Int) extends Component{
 
         cover(dutCounter.willOverflow)
         assert(dutCounter.value <= end)
+        //assert(dutCounter.value >= end)
         assert(dutCounter.valueNext <= end)
-        assert(dutCounter.value > start)
-        //assert(dutCounter.valueNext > start)
-
+        assert(start <= dutCounter.value)
+        assert(start <= dutCounter.valueNext)
+        assert((dutCounter.value === dutCounter.valueNext -1) || dutCounter.willOverflow || !dutCounter.willIncrement)
+        assert(!dutCounter.willOverflowIfInc || dutCounter.value === end )
+        assert(!dutCounter.willOverflow || (dutCounter.value === end) || !dutCounter.willIncrement)
     }
-    
+
 }
 
 object DutTests {
     def main(args: Array[String]): Unit = {
-        SpinalConfig().includeFormal.generateSystemVerilog(new testCounter(2,10))
+        val test = SpinalConfig(defaultConfigForClockDomains=ClockDomainConfig(resetActiveLevel=HIGH)).includeFormal.generateSystemVerilog(new testCounter(2,10))
+        val dd = new YosysFlow(test,"tasty").formal(Mode.prove).use(Solver.boolector).step(100).run()
+        val test2 = SpinalConfig().includeFormal.generateVerilog(new testCounter(2,10))
+        val df = new YosysFlow(test2,"rrrr").nextpnr_ice40().setTarget(Ice40.hx8k,Ice40.pack.bg121).withPCF("test.pcf").targetFrequency(100 MHz).run
+        //df.run()
+        //target: String,pack: String, jsonPath : String = "", pcfPath : String
     }
   }
